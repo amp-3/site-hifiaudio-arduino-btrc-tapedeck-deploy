@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>ESP32 LED Control</title>
+</head>
+
+<body>
+    <h1>ESP32 LED Control</h1>
+    <button onclick="connect()">Connect to ESP32</button>
+    <button onclick="sendCommand('ON')">Turn LED ON</button>
+    <button onclick="sendCommand('OFF')">Turn LED OFF</button>
+
+    <script>
+        let characteristic;
+
+        async function connect() {
+            try {
+                const device = await navigator.bluetooth.requestDevice({
+                    filters: [{ services: ['12345678-1234-1234-1234-123456789012'] }]
+                });
+
+                const server = await device.gatt.connect();
+                const service = await server.getPrimaryService('12345678-1234-1234-1234-123456789012');
+                characteristic = await service.getCharacteristic('87654321-4321-4321-4321-210987654321');
+
+                alert('Connected to ESP32');
+            } catch (error) {
+                console.log(error);
+                alert('Failed to connect to ESP32\n\n' + error);
+            }
+        }
+
+        async function sendCommand(command) {
+            if (!characteristic) {
+                alert('Not connected to ESP32');
+                return;
+            }
+
+            const encoder = new TextEncoder();
+            const data = encoder.encode(command);
+
+            try {
+                await characteristic.writeValue(data);
+                alert(`Command ${command} sent`);
+            } catch (error) {
+                console.log(error);
+                alert('Failed to send command');
+            }
+        }
+    </script>
+</body>
+
+</html>
